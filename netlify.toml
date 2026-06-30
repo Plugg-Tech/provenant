@@ -1,6 +1,8 @@
 [build]
   publish = "web"
-  command = ""
+  # Static site — no build step. A no-op command avoids the empty-command
+  # build error; matches the documented build command in DEPLOY.md.
+  command = "echo 'Static site'"
 
 [[headers]]
   for = "/*"
