@@ -1,5 +1,6 @@
-# Render blueprint. Push this repo to GitHub, then in Render: New +  ->  Blueprint,
-# pick the repo, and set the secret env vars.
+# Render Blueprint — Provenant API
+# Push this repo to GitHub, then in Render: New + -> Blueprint, pick the repo.
+# Set secret env vars in the Render dashboard after deployment.
 services:
   - type: web
     name: provenant-api
@@ -8,16 +9,23 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn tangible.api:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /healthz
+    autoDeploy: true
     envVars:
+      # Provider selection (auto picks whichever key is set)
       - key: TANGIBLE_IDENTITY_PROVIDER
-        value: auto          # uses Stripe or Persona when keys are set, else simulated
+        value: auto
       - key: TANGIBLE_NOTARY_PROVIDER
-        value: auto          # uses PandaDoc when PANDADOC_API_KEY is set, else simulated
+        value: auto
+      # Stripe Identity (set in dashboard)
       - key: STRIPE_API_KEY
-        sync: false          # set in the Render dashboard (sk_test_... then sk_live_...)
+        sync: false
       - key: STRIPE_WEBHOOK_SECRET
-        sync: false          # set after creating the Stripe webhook (whsec_...)
-      - key: PANDADOC_API_KEY
-        sync: false          # set in the Render dashboard (sandbox or live key)
+        sync: false
+      # Persona Identity (set in dashboard)
       - key: PERSONA_API_KEY
-        sync: false          # set in the Render dashboard (sandbox or live key)
+        sync: false
+      - key: PERSONA_TEMPLATE_ID
+        sync: false
+      # PandaDoc Notary (set in dashboard)
+      - key: PANDADOC_API_KEY
+        sync: false
