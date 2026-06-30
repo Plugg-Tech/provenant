@@ -58,6 +58,52 @@ class ActionResult:
     created_at: str = ""
 
 
+@dataclass
+class Receipt:
+    """A verifiable pay+proof receipt (Decision 8).
+
+    The nested `signed` block is the exact byte range the Ed25519 signature
+    covers; `proof` holds the signature material and `ledger` the chain position.
+    Call `verify()` to validate the signature against the issuer.
+    """
+    receipt_id: str
+    mode: str                              # "test" | "live" (Decision 13)
+    signed: dict                           # {"payment": {...}, "action": {...}|None}
+    proof: dict                            # {"alg", "key_id", "content_hash", "sig", ...}
+    ledger: dict                           # {"seq", "prev_hash", "entry_hash", ...}
+    created_at: str = ""
+    _client: Optional["ProvenantClient"] = field(default=None, repr=False, compare=False)
+
+    @property
+    def amount(self) -> int:
+        return self.signed.get("payment", {}).get("amount", 0)
+
+    @property
+    def currency(self) -> str:
+        return self.signed.get("payment", {}).get("currency", "")
+
+    @property
+    def action(self) -> Optional[dict]:
+        return self.signed.get("action")
+
+    def as_dict(self) -> dict:
+        return {
+            "receipt_id": self.receipt_id,
+            "mode": self.mode,
+            "signed": self.signed,
+            "proof": self.proof,
+            "ledger": self.ledger,
+            "created_at": self.created_at,
+        }
+
+    def verify(self) -> bool:
+        """Verify the receipt's signature via the API. Returns True if valid."""
+        if self._client is None:
+            raise RuntimeError("Receipt is not bound to a client; use client.pay(...)")
+        ok, _ = self._client.verify_proof(self.as_dict())
+        return ok
+
+
 class ProvenantClient:
     """Client for the Provenant physical-action API.
 
@@ -187,6 +233,87 @@ class ProvenantClient:
             ledger_entry=data.get("ledger_entry"),
             rejection_reason=data.get("rejection_reason"),
             created_at=data.get("created_at", ""),
+        )
+
+    # ---- Pay + proof (verifiable receipt) ----
+
+    def pay(self, amount: int, currency: str, payment_method: str,
+            action_ref: Optional[str] = None,
+            idempotency_key: Optional[str] = None) -> Receipt:
+        """Charge a rail and return a verifiable Receipt.
+
+        Args:
+            amount: Amount in minor units (e.g. cents).
+            currency: ISO 4217 currency code (e.g. "usd").
+            payment_method: Rail payment-method token (e.g. "sim_ok" in test).
+            action_ref: Optional prior action id to bind the receipt to (D2).
+            idempotency_key: Required for safe retries (D12). Defaults to a stable
+                hash of the request when omitted; pass your own to override.
+
+        Returns:
+            A Receipt whose `.verify()` validates the signature.
+
+        Raises:
+            PaymentDeclined, ProofMintError, ConfirmationRequired — typed by the
+            server `code`, each carrying `.code`, `.hint`, and `.retry_safe` (D14).
+        """
+        if idempotency_key is None:
+            idempotency_key = self._default_idempotency_key(
+                amount, currency, payment_method, action_ref
+            )
+        body: dict[str, Any] = {
+            "amount": amount,
+            "currency": currency,
+            "payment_method": payment_method,
+            "idempotency_key": idempotency_key,
+        }
+        if action_ref:
+            body["action_ref"] = action_ref
+
+        resp = self._client.post("/v1/actions/pay", json=body)
+        if resp.status_code >= 400:
+            self._raise_pay_error(resp)
+        data = resp.json()
+        return Receipt(
+            receipt_id=data["receipt_id"],
+            mode=data["mode"],
+            signed=data["signed"],
+            proof=data["proof"],
+            ledger=data["ledger"],
+            created_at=data.get("created_at", ""),
+            _client=self,
+        )
+
+    @staticmethod
+    def _default_idempotency_key(amount: int, currency: str,
+                                 payment_method: str, action_ref: Optional[str]) -> str:
+        import hashlib
+
+        raw = f"{amount}:{currency}:{payment_method}:{action_ref or ''}"
+        return "idem_" + hashlib.sha256(raw.encode("utf-8")).hexdigest()[:24]
+
+    def _raise_pay_error(self, resp) -> None:
+        from .exceptions import (
+            PAYMENT_EXCEPTIONS,
+            AuthenticationError,
+            PaymentError,
+        )
+
+        if resp.status_code in (401, 403):
+            raise AuthenticationError("Invalid or missing API key", status_code=resp.status_code)
+        try:
+            err = resp.json().get("error", {})
+        except Exception:
+            err = {}
+        code = err.get("code", "pay_error")
+        exc_cls = PAYMENT_EXCEPTIONS.get(code, PaymentError)
+        raise exc_cls(
+            err.get("message", f"API error {resp.status_code}"),
+            code=code,
+            hint=err.get("hint", ""),
+            retry_safe=err.get("retry_safe", False),
+            status_code=resp.status_code,
+            response=err,
         )
 
     # ---- Proof verification ----

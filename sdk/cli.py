@@ -3,6 +3,7 @@
 Usage:
     provenant verify-identity --name "Jordan" --email "jordan@acme.com"
     provenant notarize --doc "Promissory Note" --hash <sha256> --state TX --signer "Jordan <jordan@acme.com>"
+    provenant pay 4200 usd --payment-method sim_ok --action-ref act_77c
     provenant verify --proof proof.json
     provenant revoke --proof-id prf_xxx
     provenant ledger
@@ -91,6 +92,29 @@ def cmd_notarize(args):
         print(f"\n  Rejected: {result.rejection_reason}", file=sys.stderr)
 
 
+def cmd_pay(args):
+    from .exceptions import PaymentError
+
+    c = _client(args)
+    try:
+        receipt = c.pay(
+            amount=args.amount,
+            currency=args.currency.lower(),
+            payment_method=args.payment_method,
+            action_ref=args.action_ref,
+            idempotency_key=args.idempotency_key,
+        )
+    except PaymentError as exc:
+        _print_json({"code": exc.code, "message": str(exc),
+                     "hint": exc.hint, "retry_safe": exc.retry_safe})
+        print(f"\n  Payment failed [{exc.code}]: {exc.hint}", file=sys.stderr)
+        return 1
+    _print_json(receipt.as_dict())
+    ok = receipt.verify()
+    print(f"\n  Receipt {receipt.receipt_id} ({receipt.mode}) · verify={ok}", file=sys.stderr)
+    return 0 if ok else 1
+
+
 def cmd_verify(args):
     c = _client(args)
     with open(args.proof_file) as f:
@@ -140,6 +164,15 @@ def main(argv: list[str] | None = None):
     s_not.add_argument("--reference", help="Optional caller reference")
     s_not.add_argument("--idempotency-key", help="Retry-safe key")
 
+    # pay
+    s_pay = sub.add_parser("pay", help="Charge and return a verifiable receipt")
+    s_pay.add_argument("amount", type=int, help="Amount in minor units (e.g. cents)")
+    s_pay.add_argument("currency", help="Currency code, e.g. usd")
+    s_pay.add_argument("--payment-method", default="sim_ok",
+                       help="Rail payment-method token (default: sim_ok for test)")
+    s_pay.add_argument("--action-ref", help="Prior action id to bind the receipt to")
+    s_pay.add_argument("--idempotency-key", help="Retry-safe key (defaults to a request hash)")
+
     # verify
     s_ver = sub.add_parser("verify", help="Verify a saved proof")
     s_ver.add_argument("proof_file", help="Path to proof JSON file")
@@ -157,6 +190,7 @@ def main(argv: list[str] | None = None):
         "health": cmd_health,
         "verify-identity": cmd_verify_identity,
         "notarize": cmd_notarize,
+        "pay": cmd_pay,
         "verify": cmd_verify,
         "revoke": cmd_revoke,
         "ledger": cmd_ledger,

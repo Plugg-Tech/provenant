@@ -18,10 +18,24 @@ from .identity_providers import (
     StripeIdentityProvider,
     default_identity_provider,
 )
+from .rail_providers import (
+    ChargeRequest,
+    ChargeResult,
+    RailAdapter,
+    SimulatedRail,
+    StripeRail,
+    get_rail_adapter,
+)
 
 __all__ = [
     "PersonaIdentityProvider",
     "SimulatedIdentityProvider",
     "StripeIdentityProvider",
     "default_identity_provider",
+    "ChargeRequest",
+    "ChargeResult",
+    "RailAdapter",
+    "SimulatedRail",
+    "StripeRail",
+    "get_rail_adapter",
 ]

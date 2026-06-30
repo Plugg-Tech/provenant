@@ -15,7 +15,27 @@ CLI:
     python -m sdk.cli revoke --proof-id prf_xxx
     python -m sdk.cli ledger
 """
-from .client import ProvenantClient
-from .exceptions import ProvenantError, AuthenticationError, ActionRejectedError, NotFoundError
+from .client import ProvenantClient, Receipt
+from .exceptions import (
+    ActionRejectedError,
+    AuthenticationError,
+    ConfirmationRequired,
+    NotFoundError,
+    PaymentDeclined,
+    PaymentError,
+    ProofMintError,
+    ProvenantError,
+)
 
-__all__ = ["ProvenantClient", "ProvenantError", "AuthenticationError", "ActionRejectedError", "NotFoundError"]
+__all__ = [
+    "ProvenantClient",
+    "Receipt",
+    "ProvenantError",
+    "AuthenticationError",
+    "ActionRejectedError",
+    "NotFoundError",
+    "PaymentError",
+    "PaymentDeclined",
+    "ProofMintError",
+    "ConfirmationRequired",
+]
