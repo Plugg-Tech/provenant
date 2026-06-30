@@ -1,6 +1,6 @@
 [build]
   publish = "web"
-  command = "echo 'Static site — no build needed'"
+  command = ""
 
 [[headers]]
   for = "/*"
@@ -12,10 +12,10 @@
 [[headers]]
   for = "/try.html"
   [headers.values]
-    Content-Security-Policy = "default-src 'self' 'unsafe-inline' 'unsafe-eval'; connect-src 'self' http://127.0.0.1:8000 https://api.useprovenant.xyz; img-src 'self' data:; font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com"
+    Content-Security-Policy = "default-src 'self' 'unsafe-inline' 'unsafe-eval'; connect-src 'self' http://127.0.0.1:8000 https://provenant-iz41.onrender.com; img-src 'self' data:; font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com"
 
 [[redirects]]
   from = "/api/*"
-  to = "https://api.useprovenant.xyz/:splat"
+  to = "https://provenant-iz41.onrender.com/:splat"
   status = 200
   force = false
