@@ -4,15 +4,18 @@ Two services: **Render** (API backend) and **Netlify** (static website).
 
 ---
 
-## 1. Deploy the API on Render
+## 1. Deploy the API on Render (free tier)
 
-### Option A: Blueprint (recommended)
-
-1. Push this repo to GitHub (already done: `Plugg-Tech/provenant`)
-2. Go to https://dashboard.render.com → **New +** → **Blueprint**
-3. Select the `Plugg-Tech/provenant` repo
-4. Render reads `render.yaml` and creates the service
-5. Set environment variables in the dashboard:
+1. Go to https://dashboard.render.com → **New +** → **Web Service**
+2. Connect the `Plugg-Tech/provenant` GitHub repo
+3. Settings:
+   - **Name:** `provenant-api`
+   - **Runtime:** Python
+   - **Build Command:** `pip install -r requirements.txt`
+   - **Start Command:** `uvicorn tangible.api:app --host 0.0.0.0 --port $PORT`
+   - **Health Check Path:** `/healthz`
+4. Click **Create Web Service**
+5. Go to **Environment** tab and add these variables:
 
 | Variable | Value |
 |---|---|
@@ -23,20 +26,8 @@ Two services: **Render** (API backend) and **Netlify** (static website).
 | `PERSONA_TEMPLATE_ID` | `itmpl_xxx` |
 | `PANDADOC_API_KEY` | your PandaDoc sandbox key |
 
-6. Deploy. The API will be at `https://provenant-api.onrender.com`
+6. Deploy. API will be at `https://provenant-api.onrender.com`
 7. Verify: `https://provenant-api.onrender.com/healthz`
-
-### Option B: Manual
-
-1. Render → **New +** → **Web Service**
-2. Connect the `Plugg-Tech/provenant` repo
-3. Settings:
-   - **Runtime:** Python
-   - **Build Command:** `pip install -r requirements.txt`
-   - **Start Command:** `uvicorn tangible.api:app --host 0.0.0.0 --port $PORT`
-   - **Health Check Path:** `/healthz`
-4. Add env vars (same as above)
-5. Deploy
 
 ---
 
