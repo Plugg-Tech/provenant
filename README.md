@@ -99,7 +99,8 @@ macOS/Linux: `python3 -m venv .venv && source .venv/bin/activate`. Python 3.10+.
 ```bat
 uvicorn tangible.api:app --reload
 ```
-Endpoints: `POST /v1/actions/notarize`, `GET /v1/actions/{id}`, `POST /v1/verify`,
+Endpoints: `POST /v1/actions/notarize`, `GET /v1/actions/{id}`,
+`POST /v1/actions/pay`, `GET /v1/receipts/{id}`, `POST /v1/verify`,
 `POST /v1/proofs/{id}/revoke`, `GET /v1/ledger/verify`,
 `POST /v1/actions/verify-identity`, `GET /v1/identity/{id}`,
 `POST /v1/webhooks/stripe`. Docs at `/docs`.
@@ -125,7 +126,7 @@ Add to your Claude Desktop config (`claude_desktop_config.json`):
   }
 }
 ```
-The server exposes 3 tools: `provenant_verify_identity`, `provenant_notarize`, `provenant_verify_proof`.
+The server exposes 4 tools: `provenant_verify_identity`, `provenant_notarize`, `provenant_pay`, `provenant_verify_proof`.
 
 ### Python SDK
 ```python
@@ -147,7 +148,55 @@ result = client.notarize(
 
 # Verify a proof
 ok, reason = client.verify_proof(result.proof)
+
+# Pay + proof — charge and get a verifiable receipt (no keys needed in test mode)
+receipt = client.pay(
+    4200, "usd",
+    payment_method="sim_ok",
+    action_ref="act_notarize_77c",   # optional: binds the proof to a proven action
+    idempotency_key="agent-x9-001",  # required for safe retries
+)
+print(receipt.verify())              # -> True
 ```
+
+### Pay + proof (Stripe for Agents)
+
+`pay()` is a rail-agnostic **trust & settlement layer**: it charges through a
+payment rail (Stripe today, behind a minimal `RailAdapter` seam) and returns a
+cryptographically signed, ledgered **verifiable receipt** proving the real-world
+action behind the payment actually happened.
+
+The flow is two-phase — **authorize → mint → capture** — so the invariant *no
+captured payment ever lacks a valid proof* always holds: if minting the proof
+fails, the authorization is voided and no money moves.
+
+The receipt is a nested envelope; the `signed` block is the exact byte range the
+Ed25519 signature covers (verify it with the same `POST /v1/verify`):
+
+```json
+{
+  "receipt_id": "rcpt_8f2a",
+  "mode": "test",
+  "signed": {
+    "payment": {"amount": 4200, "currency": "usd", "rail": "stripe",
+                "rail_ref": "pi_3Qk…", "status": "captured", "payer": "agent"},
+    "action":  {"action_ref": "act_notarize_77c", "kind": "notarize", "verified": true}
+  },
+  "proof":  {"alg": "ed25519", "sig": "9c4f…a1", "key_id": "k_pin1"},
+  "ledger": {"seq": 2841, "prev_hash": "b7…"}
+}
+```
+
+- **Mode** is driven by the public-key prefix (`pk_test_` → `test`, `pk_live_` → `live`).
+- **Failures** are typed: `PaymentDeclined`, `ProofMintError`, `ConfirmationRequired`,
+  each carrying `.code`, `.hint`, and `.retry_safe` so an agent can branch on them.
+- **No keys needed** to start: the first `pay()` runs against the built-in
+  `SimulatedRail` and returns a real signed receipt; Stripe keys are only needed
+  to go live.
+
+**Pricing:** pay+proof is billed as a **flat fee per minted receipt**, on top of
+whatever the underlying rail charges — revenue scales with verified actions, not
+dollar volume.
 
 ### CLI tool
 ```bat
@@ -155,6 +204,7 @@ py -m sdk.cli health
 py -m sdk.cli verify-identity --name "Jordan" --email "jordan@acme.com"
 py -m sdk.cli notarize --doc "Promissory Note" --hash <sha256> --state TX --signer "Jordan <jordan@acme.com>"
 py -m sdk.cli notarize --doc "Promissory Note" --file document.pdf --state TX --signer "Jordan <jordan@acme.com>"
+py -m sdk.cli pay 4200 usd --payment-method sim_ok --action-ref act_77c
 py -m sdk.cli verify proof.json
 py -m sdk.cli revoke --proof-id prf_xxx
 py -m sdk.cli ledger
@@ -199,7 +249,8 @@ tangible/
   notary.py        SIMULATED commissioned notary + journal
   service.py       orchestration: idempotency, revocation, ledgering (the core)
   identity_service.py  verify_identity verb (async session -> signed proof)
-  providers/       fulfillment adapters (Simulated + real Stripe Identity)
+  pay_service.py   pay+proof verb (two-phase authorize->mint->capture; receipt)
+  providers/       fulfillment adapters (identity + payment rails: Sim + Stripe)
   mcp_tool.py      agent-facing tool schema + call_tool()
   certificate.py   text (+ optional PDF) certificate rendering
   api.py           FastAPI HTTP layer
@@ -208,8 +259,8 @@ sdk/
   __init__.py      ProvenantClient + exceptions
   client.py        typed HTTP client (sync, httpx-based)
   exceptions.py    ProvenantError, AuthenticationError, etc.
-  cli.py           CLI tool (health, verify-identity, notarize, verify, revoke, ledger)
-mcp_server.py      MCP server (stdio JSON-RPC, 3 tools exposed)
+  cli.py           CLI tool (health, verify-identity, notarize, pay, verify, revoke, ledger)
+mcp_server.py      MCP server (stdio JSON-RPC, 4 tools exposed)
 agent_demo.py      the end-to-end agent demo (narrated trace)
 demo_full.py       polished demo with 10 security checks (for recording)
 VIDEO_SCRIPTS.md   betaworks 3-video scripts + recording checklist

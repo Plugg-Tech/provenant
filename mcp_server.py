@@ -18,10 +18,23 @@ from typing import Any
 
 from tangible import crypto, mcp_tool
 from tangible.keyring import default_keyring
-from tangible.models import ACTION_NOTARIZE, ActionRequest, Party
+from tangible.models import ACTION_NOTARIZE, ActionRequest, Party, new_id
+from tangible.pay_service import PayError, PayService
 from tangible.service import TangibleService
 
 _service = TangibleService()
+
+
+def _resolve_action(action_ref: str):
+    action = _service.get_action(action_ref)
+    if action is not None:
+        kind = action.request.get("action_type", "action") if action.request else "action"
+        return {"action_ref": action_ref, "kind": kind,
+                "verified": action.status == "completed"}
+    return None
+
+
+_pay_service = PayService(action_resolver=_resolve_action)
 
 TOOLS = [
     {
@@ -98,6 +111,37 @@ TOOLS = [
         },
     },
     {
+        "name": "provenant_pay",
+        "description": (
+            "Charge and return a cryptographically verifiable receipt. "
+            "Pass action_ref to bind it to a proven action (e.g. a prior "
+            "notarization or identity verification), so the receipt attests that "
+            "money moved AND the real-world action behind it is verified."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "integer",
+                    "description": "Amount in minor units (e.g. cents: 4200 = $42.00)",
+                },
+                "currency": {
+                    "type": "string",
+                    "description": "ISO 4217 currency code, e.g. usd",
+                },
+                "payment_method": {
+                    "type": "string",
+                    "description": "Rail payment-method token (use 'sim_ok' in test mode)",
+                },
+                "action_ref": {
+                    "type": "string",
+                    "description": "Optional prior action id to bind the receipt to",
+                },
+            },
+            "required": ["amount", "currency", "payment_method"],
+        },
+    },
+    {
         "name": "provenant_verify_proof",
         "description": (
             "Verify a Provenant proof. Checks the Ed25519 signature against the trusted key registry, "
@@ -169,11 +213,31 @@ def _handle_notarize(args: dict) -> dict:
     return out
 
 
+def _handle_pay(args: dict) -> dict:
+    idempotency_key = args.get("idempotency_key") or new_id("idem")
+    try:
+        receipt = _pay_service.pay(
+            amount=args["amount"],
+            currency=args["currency"],
+            payment_method=args["payment_method"],
+            idempotency_key=idempotency_key,
+            action_ref=args.get("action_ref"),
+        )
+    except PayError as exc:
+        return {"error": exc.to_dict()}
+    ok, reason = _pay_service.verify_receipt(receipt)
+    return {"receipt": receipt, "verification": {"valid": ok, "reason": reason}}
+
+
 def _handle_verify_proof(args: dict) -> dict:
+    from tangible.pay_service import is_receipt, reconstruct_proof
+
     proof = args["proof"]
-    ok, reason = crypto.verify_proof(proof)
+    # Accept a pay receipt envelope as well as a flat proof (Decision 8).
+    target = reconstruct_proof(proof) if is_receipt(proof) else proof
+    ok, reason = crypto.verify_proof(target)
     result: dict[str, Any] = {"valid": ok, "reason": reason}
-    if proof.get("proof_id") in _service._revoked:
+    if not is_receipt(proof) and proof.get("proof_id") in _service._revoked:
         result["valid"] = False
         result["reason"] = "proof has been revoked"
     return result
@@ -182,6 +246,7 @@ def _handle_verify_proof(args: dict) -> dict:
 HANDLERS = {
     "provenant_verify_identity": _handle_verify_identity,
     "provenant_notarize": _handle_notarize,
+    "provenant_pay": _handle_pay,
     "provenant_verify_proof": _handle_verify_proof,
 }
 
