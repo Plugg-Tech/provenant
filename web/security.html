@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Security &amp; trust — Provenant</title>
+<meta name="description" content="How Provenant secures proofs, keys, and data — Ed25519 signing, pinned-key verification, a tamper-evident ledger, and licensed providers." />
+<link rel="canonical" href="https://useprovenant.xyz/security.html" />
+<link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<nav class="site"><div class="wrap" style="display:flex;align-items:center;justify-content:space-between;width:100%;">
+  <a class="brand" href="index.html"><svg width="26" height="26" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="12.5" fill="none" stroke="#141413" stroke-width="1.5"/><circle cx="14" cy="14" r="8" fill="none" stroke="#cc785c" stroke-width="1.5"/><path d="M10 14.2 l2.8 2.8 L18.4 11" fill="none" stroke="#141413" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg> Provenant</a>
+  <div class="navlinks"><a href="product.html">Product</a><a href="docs.html">Docs</a><a href="pricing.html">Pricing</a><a href="company.html">Company</a></div>
+  <div class="navright"><a class="btn-ghost" href="try.html">Try it</a><a class="btn-ghost" href="docs.html">Docs</a><a class="btn btn-primary" href="mailto:hello@useprovenant.xyz?subject=Provenant%20access">Request access</a></div>
+</div></nav>
+
+<div class="wrap"><div class="page-head">
+  <span class="eyebrow">Security &amp; trust</span>
+  <h1 style="margin-top:12px;">Verifiable by design.</h1>
+  <p class="sub">Provenant is a trust product, so the integrity of a proof can't depend on trusting Provenant. Here's how that works.</p>
+</div></div>
+
+<div class="wrap narrow"><section class="prose">
+  <h2>Proof integrity</h2>
+  <ul>
+    <li><strong>Ed25519 signatures.</strong> Every proof is signed over its canonical claims and verifiable offline with the public key.</li>
+    <li><strong>Pinned-key verification.</strong> Verification checks the signature against a trusted key registry by fingerprint — never the key embedded in the proof — so a proof re-signed with an attacker's key is rejected.</li>
+    <li><strong>Document binding.</strong> Proofs carry the SHA-256 of the exact document; a changed document no longer matches.</li>
+    <li><strong>Tamper-evident ledger.</strong> Issued proofs are appended to a hash chain; any insertion, deletion, reorder, or edit breaks chain verification.</li>
+    <li><strong>Revocation.</strong> A revoked proof fails verification with a clear reason.</li>
+  </ul>
+
+  <h2>Keys</h2>
+  <p>Signing keys are identified by fingerprint and support rotation — rotating a key keeps previously issued proofs verifiable. In production, private keys live in a managed secret store / KMS, and the public registry is published so any party can verify independently.</p>
+
+  <h2>Identity &amp; fulfillment</h2>
+  <p>Identity verification is performed by Stripe Identity (IAL2). Notarization is fulfilled by a licensed remote-online-notarization network. Provenant orchestrates and proves these acts; it does not perform regulated acts itself.</p>
+
+  <h2>Data handling</h2>
+  <p>We minimize what we store. Sensitive identity documents are handled by the verifying provider, not retained by Provenant; we keep the verification result and the signed proof. Personal data is processed to deliver the action you request and is described in our <a class="tlink" href="privacy.html">privacy policy</a>.</p>
+
+  <h2>Reporting a vulnerability</h2>
+  <p>Found something? Email <a class="tlink" href="mailto:hello@useprovenant.xyz?subject=Security%20report">hello@useprovenant.xyz</a>. We respond quickly and credit responsible disclosure.</p>
+
+  <div class="note">Provenant is in early access. This page describes our security posture and intended controls; formal certifications (e.g. SOC 2) are on the roadmap, not yet complete.</div>
+</section></div>
+
+<footer><div class="wrap">
+  <div class="cols">
+    <div><div class="brand" style="font-size:18px;"><svg width="24" height="24" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="12.5" fill="none" stroke="#faf9f5" stroke-width="1.5"/><circle cx="14" cy="14" r="8" fill="none" stroke="#cc785c" stroke-width="1.5"/><path d="M10 14.2 l2.8 2.8 L18.4 11" fill="none" stroke="#faf9f5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg> Provenant</div><p style="color:var(--on-dark-soft);font-size:14px;margin-top:14px;max-width:24em;">The physical-action API for agents.</p></div>
+    <div><h4>Product</h4><a href="product.html">Overview</a><a href="docs.html">Docs</a><a href="pricing.html">Pricing</a></div>
+    <div><h4>Company</h4><a href="company.html">About</a><a href="company.html#careers">Careers</a><a href="mailto:hello@useprovenant.xyz">Contact</a></div>
+    <div><h4>Legal</h4><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="security.html">Security</a></div>
+  </div>
+  <div class="fineprint">© 2026 Provenant · useprovenant.xyz</div>
+</div></footer>
+</body>
+</html>

@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Try Provenant — live API demo</title>
+<meta name="description" content="Try Provenant live: verify an identity or notarize a document and see a cryptographically signed proof returned in real time." />
+<link rel="canonical" href="https://useprovenant.xyz/try.html" />
+<link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+<style>
+.try-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:40px;align-items:start;}
+.panel{background:var(--surface-card);border-radius:12px;padding:32px;}
+.panel h3{margin-bottom:20px;}
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:13px;font-weight:500;color:var(--muted);margin-bottom:6px;letter-spacing:.3px;}
+.field input,.field select{width:100%;padding:10px 14px;border:1px solid var(--hairline);border-radius:8px;font-family:var(--sans);font-size:14px;background:var(--canvas);color:var(--ink);outline:none;transition:border-color .15s;}
+.field input:focus,.field select:focus{border-color:var(--primary);}
+.field .hint{font-size:12px;color:var(--muted-soft);margin-top:4px;}
+.try-btn{width:100%;margin-top:8px;}
+.result-panel{background:var(--dark);border-radius:12px;padding:24px;color:var(--on-dark);font-family:var(--mono);font-size:13px;line-height:1.7;min-height:200px;position:relative;overflow:hidden;}
+.result-panel .label{font-family:var(--sans);font-size:12px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:var(--on-dark-soft);margin-bottom:12px;}
+.result-panel pre{white-space:pre-wrap;word-break:break-all;margin:0;}
+.result-panel .loading{color:var(--amber);animation:pulse 1.2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+.tabs{display:flex;gap:4px;margin-bottom:20px;}
+.tab{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;background:transparent;color:var(--muted);border:1px solid transparent;transition:all .15s;}
+.tab:hover{color:var(--ink);}
+.tab.active{background:var(--canvas);color:var(--ink);border-color:var(--hairline);}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;padding:3px 10px;border-radius:9999px;margin-top:12px;}
+.badge-ok{background:rgba(93,184,114,.15);color:#3a8a54;}
+.badge-err{background:rgba(200,80,80,.15);color:#c05050;}
+.badge-wait{background:rgba(232,165,90,.15);color:#b8862e;}
+.api-url{font-family:var(--mono);font-size:12px;color:var(--muted-soft);background:var(--dark-soft);padding:8px 12px;border-radius:6px;margin-bottom:16px;word-break:break-all;}
+.verify-box{margin-top:20px;padding:16px;background:var(--surface-soft);border-radius:10px;}
+.verify-box h4{font-size:14px;margin-bottom:10px;}
+.verify-box pre{font-size:12px;line-height:1.6;white-space:pre-wrap;}
+@media(max-width:900px){.try-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<nav class="site"><div class="wrap" style="display:flex;align-items:center;justify-content:space-between;width:100%;">
+  <a class="brand" href="index.html"><svg width="26" height="26" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="12.5" fill="none" stroke="#141413" stroke-width="1.5"/><circle cx="14" cy="14" r="8" fill="none" stroke="#cc785c" stroke-width="1.5"/><path d="M10 14.2 l2.8 2.8 L18.4 11" fill="none" stroke="#141413" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg> Provenant</a>
+  <div class="navlinks"><a href="product.html">Product</a><a href="docs.html">Docs</a><a href="pricing.html">Pricing</a><a href="company.html">Company</a></div>
+  <div class="navright"><a class="btn-ghost" href="docs.html">Docs</a><a class="btn btn-primary" href="mailto:hello@useprovenant.xyz?subject=Provenant%20access">Request access</a></div>
+</div></nav>
+
+<div class="wrap">
+  <div class="page-head">
+    <span class="eyebrow">Interactive demo</span>
+    <h1 style="margin-top:12px;">Try Provenant live.</h1>
+    <p class="sub">Run a real API call from your browser. The sandbox returns a cryptographically signed proof you can inspect and verify — no accounts needed.</p>
+  </div>
+</div>
+
+<div class="wrap">
+  <section style="padding-top:0;">
+    <div class="try-grid">
+      <div>
+        <div class="tabs">
+          <div class="tab active" data-tab="identity" onclick="switchTab('identity')">Verify Identity</div>
+          <div class="tab" data-tab="notarize" onclick="switchTab('notarize')">Notarize</div>
+        </div>
+
+        <div id="form-identity" class="panel">
+          <h3>Identity Verification</h3>
+          <div class="api-url">POST /v1/actions/verify-identity</div>
+          <div class="field">
+            <label>Full name</label>
+            <input type="text" id="id-name" value="Jordan Borrower" placeholder="e.g. Jordan Borrower" />
+          </div>
+          <div class="field">
+            <label>Email</label>
+            <input type="email" id="id-email" value="jordan@acme.com" placeholder="e.g. jordan@acme.com" />
+          </div>
+          <button class="btn btn-primary try-btn" onclick="runIdentity()">Run verification</button>
+        </div>
+
+        <div id="form-notarize" class="panel" style="display:none;">
+          <h3>Notarization</h3>
+          <div class="api-url">POST /v1/actions/notarize</div>
+          <div class="field">
+            <label>Document name</label>
+            <input type="text" id="not-name" value="Promissory Note" placeholder="e.g. Promissory Note" />
+          </div>
+          <div class="field">
+            <label>Document SHA-256</label>
+            <input type="text" id="not-hash" value="" placeholder="auto-generated if empty" />
+            <div class="hint">Leave blank to auto-generate from a mock document.</div>
+          </div>
+          <div class="field">
+            <label>Jurisdiction (state code)</label>
+            <input type="text" id="not-state" value="TX" placeholder="e.g. TX" maxlength="2" style="width:80px;" />
+          </div>
+          <div class="field">
+            <label>Signer name</label>
+            <input type="text" id="not-signer" value="Jordan Borrower" placeholder="e.g. Jordan Borrower" />
+          </div>
+          <div class="field">
+            <label>Signer email</label>
+            <input type="email" id="not-email" value="jordan@acme.com" placeholder="e.g. jordan@acme.com" />
+          </div>
+          <button class="btn btn-primary try-btn" onclick="runNotarize()">Run notarization</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="result-panel" id="output">
+          <div class="label">Response</div>
+          <pre id="output-pre">Click "Run verification" to see the result here.</pre>
+          <div id="output-badge"></div>
+        </div>
+
+        <div class="verify-box" id="verify-box" style="display:none;">
+          <h4>Signature verification</h4>
+          <pre id="verify-pre"></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="wrap">
+  <section style="padding-top:0;">
+    <div class="callout">
+      <h2>Ready to integrate?</h2>
+      <p>One endpoint, signed proofs, agent-native. The sandbox is free; live fulfillment is one API key away.</p>
+      <a class="btn btn-cream" href="docs.html">Read the docs</a>
+    </div>
+  </section>
+</div>
+
+<footer><div class="wrap">
+  <div class="cols">
+    <div><div class="brand" style="font-size:18px;"><svg width="24" height="24" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="12.5" fill="none" stroke="#faf9f5" stroke-width="1.5"/><circle cx="14" cy="14" r="8" fill="none" stroke="#cc785c" stroke-width="1.5"/><path d="M10 14.2 l2.8 2.8 L18.4 11" fill="none" stroke="#faf9f5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg> Provenant</div><p style="color:var(--on-dark-soft);font-size:14px;margin-top:14px;max-width:24em;">The physical-action API for agents.</p></div>
+    <div><h4>Product</h4><a href="product.html">Overview</a><a href="docs.html">Docs</a><a href="pricing.html">Pricing</a></div>
+    <div><h4>Company</h4><a href="company.html">About</a><a href="company.html#careers">Careers</a><a href="mailto:hello@useprovenant.xyz">Contact</a></div>
+    <div><h4>Legal</h4><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="security.html">Security</a></div>
+  </div>
+  <div class="fineprint">&copy; 2026 Provenant &middot; useprovenant.xyz</div>
+</div></footer>
+
+<script>
+const API = window.location.hostname === 'useprovenant.xyz'
+  ? 'https://api.useprovenant.xyz'
+  : window.location.origin;
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.tab[data-tab="${tab}"]`).classList.add('active');
+  document.getElementById('form-identity').style.display = tab === 'identity' ? '' : 'none';
+  document.getElementById('form-notarize').style.display = tab === 'notarize' ? '' : 'none';
+}
+
+function setLoading(msg) {
+  document.getElementById('output-pre').innerHTML = `<span class="loading">${msg}</span>`;
+  document.getElementById('output-badge').innerHTML = '';
+  document.getElementById('verify-box').style.display = 'none';
+}
+
+function showResult(data) {
+  document.getElementById('output-pre').textContent = JSON.stringify(data, null, 2);
+}
+
+function showBadge(ok, text) {
+  const cls = ok ? 'badge-ok' : 'badge-err';
+  document.getElementById('output-badge').innerHTML = `<span class="badge ${cls}">${text}</span>`;
+}
+
+function showVerify(valid, reason) {
+  const box = document.getElementById('verify-box');
+  box.style.display = '';
+  const status = valid ? 'VALID' : 'INVALID';
+  const color = valid ? '#3a8a54' : '#c05050';
+  document.getElementById('verify-pre').innerHTML =
+    `Signature:  <span style="color:${color}">${status}</span>\nReason:     ${reason}`;
+}
+
+async function runIdentity() {
+  const name = document.getElementById('id-name').value.trim();
+  const email = document.getElementById('id-email').value.trim();
+  if (!name || !email) { alert('Name and email are required.'); return; }
+
+  setLoading('Starting verification...');
+  try {
+    const resp = await fetch(`${API}/v1/actions/verify-identity`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ name, email }),
+    });
+    const data = await resp.json();
+    showResult(data);
+
+    if (data.status === 'verified' && data.proof) {
+      showBadge(true, 'Identity verified — signed proof returned');
+      // Verify the proof client-side
+      const vResp = await fetch(`${API}/v1/verify`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ proof: data.proof }),
+      });
+      const vData = await vResp.json();
+      showVerify(vData.valid, vData.reason);
+    } else if (data.url) {
+      showBadge(false, 'Pending — open the hosted URL to complete');
+    } else {
+      showBadge(false, `Status: ${data.status}`);
+    }
+  } catch (err) {
+    showResult({ error: err.message });
+    showBadge(false, 'Request failed');
+  }
+}
+
+function sha256hex(str) {
+  const buf = new TextEncoder().encode(str);
+  return crypto.subtle.digest('SHA-256', buf).then(hash =>
+    Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('')
+  );
+}
+
+async function runNotarize() {
+  const docName = document.getElementById('not-name').value.trim() || 'Mock Document';
+  let docHash = document.getElementById('not-hash').value.trim();
+  const jurisdiction = document.getElementById('not-state').value.trim().toUpperCase();
+  const signerName = document.getElementById('not-signer').value.trim();
+  const signerEmail = document.getElementById('not-email').value.trim();
+
+  if (!jurisdiction || jurisdiction.length !== 2) { alert('Enter a 2-letter state code.'); return; }
+  if (!signerName || !signerEmail) { alert('Signer name and email are required.'); return; }
+
+  if (!docHash) {
+    docHash = await sha256hex(`MOCK DOCUMENT: ${docName}\nThis is a sandbox mock for demo purposes.`);
+    document.getElementById('not-hash').value = docHash;
+  }
+
+  setLoading('Running notarization...');
+  try {
+    const resp = await fetch(`${API}/v1/actions/notarize`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        document_name: docName,
+        document_sha256: docHash,
+        jurisdiction,
+        parties: [{ name: signerName, email: signerEmail, role: 'signer' }],
+      }),
+    });
+    const data = await resp.json();
+    showResult(data);
+
+    if (data.status === 'completed' && data.proof) {
+      showBadge(true, 'Notarization complete — signed proof returned');
+      const vResp = await fetch(`${API}/v1/verify`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ proof: data.proof }),
+      });
+      const vData = await vResp.json();
+      showVerify(vData.valid, vData.reason);
+    } else if (data.status === 'rejected') {
+      showBadge(false, `Rejected: ${data.rejection_reason}`);
+    } else {
+      showBadge(false, `Status: ${data.status}`);
+    }
+  } catch (err) {
+    showResult({ error: err.message });
+    showBadge(false, 'Request failed');
+  }
+}
+</script>
+
+</body>
+</html>

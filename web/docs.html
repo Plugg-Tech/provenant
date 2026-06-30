@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Docs — Provenant</title>
+<meta name="description" content="Provenant API documentation: quickstart, the verify-identity and notarize verbs, proof verification, webhooks, and going live with Stripe." />
+<link rel="canonical" href="https://useprovenant.xyz/docs.html" />
+<link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<nav class="site"><div class="wrap" style="display:flex;align-items:center;justify-content:space-between;width:100%;">
+  <a class="brand" href="index.html"><svg width="26" height="26" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="12.5" fill="none" stroke="#141413" stroke-width="1.5"/><circle cx="14" cy="14" r="8" fill="none" stroke="#cc785c" stroke-width="1.5"/><path d="M10 14.2 l2.8 2.8 L18.4 11" fill="none" stroke="#141413" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg> Provenant</a>
+  <div class="navlinks"><a href="product.html">Product</a><a href="docs.html" aria-current="page">Docs</a><a href="pricing.html">Pricing</a><a href="company.html">Company</a></div>
+  <div class="navright"><a class="btn-ghost" href="try.html">Try it</a><a class="btn btn-primary" href="mailto:hello@useprovenant.xyz?subject=Provenant%20access">Request access</a></div>
+</div></nav>
+
+<div class="wrap">
+  <div class="page-head">
+    <span class="eyebrow">Documentation</span>
+    <h1 style="margin-top:12px;">Provenant API</h1>
+    <p class="sub">One typed action in, one signed proof out. Base URL <code class="inl">https://api.useprovenant.xyz</code> in production, or <code class="inl">http://127.0.0.1:8000</code> when you run the sandbox locally.</p>
+  </div>
+</div>
+
+<div class="wrap">
+<div class="docs">
+  <aside class="docnav">
+    <div class="grp">Getting started</div>
+    <a href="#quickstart">Quickstart (sandbox)</a>
+    <a href="#golive">Going live (Stripe)</a>
+    <div class="grp">Concepts</div>
+    <a href="#actions">Actions</a>
+    <a href="#proofs">Proofs</a>
+    <a href="#auth">Authentication</a>
+    <div class="grp">Verbs</div>
+    <a href="#verify-identity">Verify identity</a>
+    <a href="#notarize">Notarize</a>
+    <div class="grp">Proofs &amp; ledger</div>
+    <a href="#verify">Verify a proof</a>
+    <a href="#revoke">Revoke</a>
+    <a href="#ledger">Ledger</a>
+    <div class="grp">Reference</div>
+    <a href="#webhooks">Webhooks</a>
+    <a href="#errors">Errors</a>
+  </aside>
+
+  <div class="doc">
+
+    <h2 id="quickstart">Quickstart (sandbox)</h2>
+    <p>The sandbox runs the full API with no provider keys — identity and notarization are simulated so you can integrate offline, then flip to real fulfillment by setting one environment variable. Requires Python 3.10+.</p>
+    <div class="codeblock"><span class="c"># 1. install</span>
+git clone &lt;your-repo&gt; provenant &amp;&amp; cd provenant
+python -m venv .venv &amp;&amp; . .venv/bin/activate   <span class="c"># Windows: .venv\Scripts\activate</span>
+pip install -r requirements.txt
+
+<span class="c"># 2. run the test suite (37 tests)</span>
+python -m pytest -q
+
+<span class="c"># 3. start the API</span>
+uvicorn tangible.api:app --reload</span></div>
+    <p>Start a verification (simulated — returns a signed proof immediately):</p>
+    <div class="codeblock"><span class="k">curl</span> -X POST http://127.0.0.1:8000/v1/actions/verify-identity \
+  -H <span class="s">"Content-Type: application/json"</span> \
+  -d <span class="s">'{"name":"Dana Lee","email":"dana@example.com"}'</span></div>
+    <div class="note">Prefer the terminal-free path? Run <code class="inl">python agent_demo.py</code> to watch a mock agent hit the notarization wall, call the tool, and verify the returned proof end to end.</div>
+
+    <h2 id="golive">Going live (Stripe)</h2>
+    <p>The <code class="inl">verify_identity</code> verb becomes real the moment a Stripe key is present — no code change. Stripe test mode is free.</p>
+    <ul>
+      <li>Create a Stripe account and copy your test secret key (<code class="inl">sk_test_…</code>).</li>
+      <li>Enable Identity at <code class="inl">dashboard.stripe.com/identity</code> (test mode is free).</li>
+      <li>Set the key and restart:</li>
+    </ul>
+    <div class="codeblock"><span class="k">export</span> STRIPE_API_KEY=sk_test_xxx        <span class="c"># Windows: $env:STRIPE_API_KEY="sk_test_xxx"</span>
+uvicorn tangible.api:app --reload</span></div>
+    <p>Now <code class="inl">verify-identity</code> returns a real hosted <code class="inl">url</code>. Open it, complete Stripe's verification (test document images in test mode), then poll <code class="inl">GET /v1/identity/{action_id}</code> until <code class="inl">status</code> is <code class="inl">verified</code> and a signed <code class="inl">proof</code> appears. Full deploy steps (Render + custom domain + webhook) are in <code class="inl">SETUP_LIVE.md</code>.</p>
+
+    <h2 id="actions">Actions</h2>
+    <p>An action is a typed request to perform one real-world verb. Every action resolves to one of: <code class="inl">verified</code>/<code class="inl">completed</code> (with a <code class="inl">proof</code>), <code class="inl">pending</code> (awaiting a human session), <code class="inl">rejected</code> (failed validation or compliance), or <code class="inl">failed</code>.</p>
+
+    <h2 id="proofs">Proofs</h2>
+    <p>A proof is a JSON object of substantive claims plus a <code class="inl">key_id</code>, <code class="inl">content_hash</code>, <code class="inl">signature</code>, and <code class="inl">public_key</code>. Verify it offline, or via <code class="inl">POST /v1/verify</code>. Verification recomputes the canonical hash and checks the signature against the trusted key for <code class="inl">key_id</code> — not the embedded key — so a re-signed forgery is rejected.</p>
+
+    <h2 id="auth">Authentication</h2>
+    <p>The local sandbox is unauthenticated for development. Production uses a bearer API key on every request:</p>
+    <div class="codeblock">Authorization: Bearer pk_live_xxx</div>
+    <div class="note">Request a key by emailing <a class="tlink" href="mailto:hello@useprovenant.xyz">hello@useprovenant.xyz</a>. Keys are scoped per environment (test / live).</div>
+
+    <h2 id="verify-identity">Verify identity</h2>
+    <p><span class="method m-post">POST</span><span class="ep">/v1/actions/verify-identity</span></p>
+    <p>Starts an IAL2 identity-verification session. Returns immediately; with Stripe configured the response is <code class="inl">pending</code> with a hosted <code class="inl">url</code>.</p>
+    <table class="api"><tr><th>Field</th><th>Type</th><th>Notes</th></tr>
+      <tr><td>name</td><td>string</td><td>required</td></tr>
+      <tr><td>email</td><td>string</td><td>required</td></tr>
+      <tr><td>return_url</td><td>string</td><td>optional redirect after the session</td></tr></table>
+    <div class="codeblock">{
+  <span class="p">"action_id"</span>: <span class="s">"idv_8e7fdc36…"</span>,
+  <span class="p">"status"</span>: <span class="s">"pending"</span>,
+  <span class="p">"url"</span>: <span class="s">"https://verify.stripe.com/…"</span>,
+  <span class="p">"provider"</span>: <span class="s">"stripe"</span>,
+  <span class="p">"proof"</span>: <span class="k">null</span>
+}</div>
+
+    <h3>Get identity status</h3>
+    <p><span class="method m-get">GET</span><span class="ep">/v1/identity/{action_id}</span> — polls the provider; once verified, the response includes a signed <code class="inl">proof</code>.</p>
+
+    <h2 id="notarize">Notarize</h2>
+    <p><span class="method m-post">POST</span><span class="ep">/v1/actions/notarize</span> <span class="tag tag-beta" style="margin-left:8px;">Sandbox</span></p>
+    <p>Notarizes a document via remote online notarization. Sandbox fulfillment today; licensed RON network in private beta.</p>
+    <table class="api"><tr><th>Field</th><th>Type</th><th>Notes</th></tr>
+      <tr><td>document_name</td><td>string</td><td>required</td></tr>
+      <tr><td>document_sha256</td><td>string</td><td>required, 64 hex chars</td></tr>
+      <tr><td>jurisdiction</td><td>string</td><td>2-letter US state code</td></tr>
+      <tr><td>parties</td><td>array</td><td>each: name, email, role</td></tr>
+      <tr><td>idempotency_key</td><td>string</td><td>optional, retry-safe</td></tr></table>
+    <div class="codeblock"><span class="k">curl</span> -X POST http://127.0.0.1:8000/v1/actions/notarize \
+  -H <span class="s">"Content-Type: application/json"</span> \
+  -d <span class="s">'{"document_name":"Promissory Note",
+       "document_sha256":"7d784f…",
+       "jurisdiction":"TX",
+       "parties":[{"name":"Jordan","email":"jordan@acme.com"}]}'</span></div>
+    <p><span class="method m-get">GET</span><span class="ep">/v1/actions/{action_id}</span> returns a stored notarization result.</p>
+
+    <h2 id="verify">Verify a proof</h2>
+    <p><span class="method m-post">POST</span><span class="ep">/v1/verify</span> — body <code class="inl">{ "proof": { … } }</code>. Returns <code class="inl">{ "valid": true, "reason": "valid" }</code>. Also runs offline: <code class="inl">python -m tangible.verify proof.json</code>.</p>
+
+    <h2 id="revoke">Revoke</h2>
+    <p><span class="method m-post">POST</span><span class="ep">/v1/proofs/{proof_id}/revoke</span> — marks a proof revoked. Subsequent verification returns <code class="inl">valid: false, reason: "proof has been revoked"</code>.</p>
+
+    <h2 id="ledger">Ledger</h2>
+    <p><span class="method m-get">GET</span><span class="ep">/v1/ledger/verify</span> — recomputes the hash chain and returns <code class="inl">{ valid, reason, entries }</code>. Any tampering, insertion, or reordering breaks the chain.</p>
+
+    <h2 id="webhooks">Webhooks</h2>
+    <p><span class="method m-post">POST</span><span class="ep">/v1/webhooks/stripe</span> — receives Stripe Identity events. Subscribe to <code class="inl">identity.verification_session.verified</code>; set <code class="inl">STRIPE_WEBHOOK_SECRET</code> to enforce signature verification. On a verified event, Provenant finalizes the session and issues the proof — no polling needed.</p>
+
+    <h2 id="errors">Errors</h2>
+    <table class="api"><tr><th>Status</th><th>Meaning</th></tr>
+      <tr><td>200</td><td>OK — check the body's <code class="inl">status</code> for rejected actions</td></tr>
+      <tr><td>400</td><td>Bad request or webhook signature failure</td></tr>
+      <tr><td>404</td><td>Unknown action or session id</td></tr>
+      <tr><td>422</td><td>Validation error (bad email, malformed sha256, duplicate parties)</td></tr></table>
+    <p style="margin-top:24px;"><a class="tlink" href="mailto:hello@useprovenant.xyz">Questions? hello@useprovenant.xyz →</a></p>
+
+  </div>
+</div>
+</div>
+
+<footer><div class="wrap">
+  <div class="cols">
+    <div><div class="brand" style="font-size:18px;"><svg width="24" height="24" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="12.5" fill="none" stroke="#faf9f5" stroke-width="1.5"/><circle cx="14" cy="14" r="8" fill="none" stroke="#cc785c" stroke-width="1.5"/><path d="M10 14.2 l2.8 2.8 L18.4 11" fill="none" stroke="#faf9f5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg> Provenant</div><p style="color:var(--on-dark-soft);font-size:14px;margin-top:14px;max-width:24em;">The physical-action API for agents.</p></div>
+    <div><h4>Product</h4><a href="product.html">Overview</a><a href="docs.html">Docs</a><a href="pricing.html">Pricing</a></div>
+    <div><h4>Company</h4><a href="company.html">About</a><a href="company.html#careers">Careers</a><a href="mailto:hello@useprovenant.xyz">Contact</a></div>
+    <div><h4>Legal</h4><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="security.html">Security</a></div>
+  </div>
+  <div class="fineprint">© 2026 Provenant · useprovenant.xyz</div>
+</div></footer>
+
+</body>
+</html>

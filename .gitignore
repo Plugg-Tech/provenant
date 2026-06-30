@@ -1,0 +1,13 @@
+# secrets / local state — never commit
+.env
+tangible_key.json
+tangible_keyring.json
+tangible_ledger.jsonl
+sample_proof.json
+sample_certificate.pdf
+
+# python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/

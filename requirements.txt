@@ -1,0 +1,17 @@
+# Core (required)
+cryptography>=41
+
+# Real identity verification (Stripe Identity)
+stripe>=9
+
+# Real notarization (PandaDoc Notary) — httpx used by the provider
+httpx>=0.27
+
+# HTTP API layer + tests
+fastapi>=0.110
+uvicorn>=0.29
+pytest>=8
+
+# Optional: PDF certificate rendering. If absent, the demo writes a text
+# certificate and skips the PDF without error.
+reportlab>=4

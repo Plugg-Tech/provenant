@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Product — Provenant</title>
+<meta name="description" content="How Provenant lets AI agents perform real-world actions and receive verifiable proofs." />
+<link rel="canonical" href="https://useprovenant.xyz/product.html" />
+<link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<nav class="site"><div class="wrap" style="display:flex;align-items:center;justify-content:space-between;width:100%;">
+  <a class="brand" href="index.html"><svg width="26" height="26" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="12.5" fill="none" stroke="#141413" stroke-width="1.5"/><circle cx="14" cy="14" r="8" fill="none" stroke="#cc785c" stroke-width="1.5"/><path d="M10 14.2 l2.8 2.8 L18.4 11" fill="none" stroke="#141413" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg> Provenant</a>
+  <div class="navlinks"><a href="product.html" aria-current="page">Product</a><a href="docs.html">Docs</a><a href="pricing.html">Pricing</a><a href="company.html">Company</a></div>
+  <div class="navright"><a class="btn-ghost" href="try.html">Try it</a><a class="btn-ghost" href="docs.html">Docs</a><a class="btn btn-primary" href="mailto:hello@useprovenant.xyz?subject=Provenant%20access">Request access</a></div>
+</div></nav>
+
+<div class="wrap">
+  <div class="page-head">
+    <span class="eyebrow">Product</span>
+    <h1 style="margin-top:12px;">The bridge between agents and the physical world.</h1>
+    <p class="sub">Agents can run whole workflows on their own — until a step has to touch the legal or physical world. Provenant turns those steps into one API call that returns a proof.</p>
+  </div>
+</div>
+
+<div class="wrap">
+  <section>
+    <span class="eyebrow">The wall</span>
+    <h2 style="margin-top:12px;max-width:18em;">Intelligence isn't the bottleneck anymore. Action is.</h2>
+    <p class="lead">An agent can draft a loan packet, assemble a closing, or onboard a contractor. Then it stalls: this signature must be notarized, this person must be identity-verified, this site must be inspected. No amount of reasoning clears those steps — they require a real-world act with a result you can trust. Today there's no agent-native way to perform them, so the whole workflow waits on a human.</p>
+  </section>
+</div>
+
+<div class="wrap">
+  <section style="padding-top:0;">
+    <div class="band-dark">
+      <div>
+        <span class="eyebrow" style="color:var(--on-dark-soft);">How it works</span>
+        <h2 style="margin-top:12px;">Intent in. Proof out.</h2>
+        <div class="steps">
+          <div class="step"><span class="n">01</span><span>The agent calls an action with the parties, document, and jurisdiction.</span></div>
+          <div class="step"><span class="n">02</span><span>Provenant proofs identities (IAL2) and routes the request for compliance.</span></div>
+          <div class="step"><span class="n">03</span><span>A hosted session link is returned for the human to complete.</span></div>
+          <div class="step"><span class="n">04</span><span>On completion, a signed proof is issued and appended to the ledger.</span></div>
+          <div class="step"><span class="n">05</span><span>A webhook fires; the agent verifies the proof and continues.</span></div>
+        </div>
+      </div>
+      <div class="mock" style="background:var(--dark-soft);">
+        <div class="code"><span class="c"># the proof an agent receives</span>
+{
+  <span class="p">"action_type"</span>: <span class="s">"verify_identity"</span>,
+  <span class="p">"subject_email"</span>: <span class="s">"jordan@acme.com"</span>,
+  <span class="p">"ial_level"</span>: <span class="s">"IAL2"</span>,
+  <span class="p">"provider"</span>: <span class="s">"stripe"</span>,
+  <span class="p">"issued_at"</span>: <span class="s">"2026-06-30T07:04Z"</span>,
+  <span class="p">"key_id"</span>: <span class="s">"k_2e6604…"</span>,
+  <span class="p">"signature"</span>: <span class="s">"ed25519:9f4c…"</span>,
+  <span class="p">"content_hash"</span>: <span class="s">"62211293…"</span>
+}</div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="wrap">
+  <section style="padding-top:0;">
+    <span class="eyebrow">Anatomy of a proof</span>
+    <h2 style="margin-top:12px;max-width:18em;">A result an agent can trust without trusting us.</h2>
+    <div class="cards">
+      <div class="card"><h3>Signed</h3><p>Ed25519 signature over the canonical claims. Verifiable offline with the public key — no call back to Provenant required.</p></div>
+      <div class="card"><h3>Pinned</h3><p>Verification checks the signature against a trusted key registry by fingerprint, never the key embedded in the proof. Forged keys are rejected.</p></div>
+      <div class="card"><h3>Bound &amp; ledgered</h3><p>The proof is bound to the exact document hash and written to a tamper-evident hash chain. Insert, edit, or reorder and verification fails closed.</p></div>
+    </div>
+  </section>
+</div>
+
+<div class="wrap" id="verbs">
+  <section style="padding-top:0;">
+    <span class="eyebrow">Actions</span>
+    <h2 style="margin-top:12px;max-width:16em;">One interface, a growing set of verbs.</h2>
+    <div class="verbs">
+      <div class="verb"><div class="nm">Identity</div><div class="tag tag-live">Live</div><p>IAL2 verification via Stripe Identity with a signed result.</p></div>
+      <div class="verb"><div class="nm">Notarization</div><div class="tag tag-beta">Private beta</div><p>Remote online notarization through a licensed RON network.</p></div>
+      <div class="verb"><div class="nm">Witnessing</div><div class="tag tag-soon">Soon</div><p>Attested signatures with a verified human witness.</p></div>
+      <div class="verb"><div class="nm">Inspection</div><div class="tag tag-soon">Soon</div><p>On-site verification returning structured, signed evidence.</p></div>
+    </div>
+    <p class="lead" style="margin-top:28px;">Every verb shares one typed request shape and one proof envelope — so the integration you write for identity is the integration you keep as we add notarization, witnessing, and inspection.</p>
+  </section>
+</div>
+
+<div class="wrap">
+  <section style="padding-top:0;">
+    <div class="callout">
+      <h2>See it return a real proof.</h2>
+      <p>The identity verb is live. Read the quickstart and run it against the sandbox in minutes.</p>
+      <a class="btn btn-cream" href="docs.html">Open the docs</a>
+    </div>
+  </section>
+</div>
+
+<footer><div class="wrap">
+  <div class="cols">
+    <div><div class="brand" style="font-size:18px;"><svg width="24" height="24" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="12.5" fill="none" stroke="#faf9f5" stroke-width="1.5"/><circle cx="14" cy="14" r="8" fill="none" stroke="#cc785c" stroke-width="1.5"/><path d="M10 14.2 l2.8 2.8 L18.4 11" fill="none" stroke="#faf9f5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg> Provenant</div><p style="color:var(--on-dark-soft);font-size:14px;margin-top:14px;max-width:24em;">The physical-action API for agents.</p></div>
+    <div><h4>Product</h4><a href="product.html">Overview</a><a href="docs.html">Docs</a><a href="pricing.html">Pricing</a></div>
+    <div><h4>Company</h4><a href="company.html">About</a><a href="company.html#careers">Careers</a><a href="mailto:hello@useprovenant.xyz">Contact</a></div>
+    <div><h4>Legal</h4><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="security.html">Security</a></div>
+  </div>
+  <div class="fineprint">© 2026 Provenant · useprovenant.xyz</div>
+</div></footer>
+
+</body>
+</html>
