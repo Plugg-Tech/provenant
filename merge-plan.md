@@ -1,6 +1,6 @@
 # The Merge Plan — Provenant + Represent
 
-*Drafted 30 June 2026. Validation-first: every phase below has a kill criterion. Don't carry a phase forward on vibes.*
+*Drafted 30 June 2026. Updated with verified competitive intelligence 30 June 2026. Validation-first: every phase below has a kill criterion. Don't carry a phase forward on vibes.*
 
 ---
 
@@ -68,3 +68,37 @@ Open proof schema/registry, ambient pricing at volume, underwriting on the outco
 ## Owner / next action
 
 Emmanuel — start Phase 1 outreach this week (both tracks in parallel; each takes a few conversations, not a build). Revisit this plan after the first 3–5 conversations land, before writing a line of integration code.
+
+---
+
+## Addendum — Verified Competitive Intelligence (30 June 2026)
+
+A research report was reviewed and fact-checked against live sources. Here's what it changes, and what it doesn't.
+
+### What's confirmed real
+
+**ADRP / ATXN / VCAP** — Active IETF internet-drafts from SwarmSync.AI (Ben Stone), published April 2026. These are real, architecturally serious specifications covering: A2A transaction definition (ATXN), dispute resolution state machine (ADRP), verified commerce settlement (VCAP), and AP2 binding (VCAP-AP2). They explicitly define the "counter-attestation override pattern" — an immutable original proof superseded by an equally immutable ruling on the same append-only chain. This is the exact merged thesis, specified by a third party, published before you ship it. That's useful.
+
+**AgentCourt** — Real, open-source, live at agentcourt.org. Policy-driven dispute resolution API: 7 policy templates, 39 deterministic rules, sub-500ms rulings, $0.05/dispute via x402 USDC on Base, MCP server and Python/JS SDKs available. It is a direct competitor to Represent's dispute pipeline, not just a market validator.
+
+**CertNode** — Real. Reflex product does automated Stripe chargeback defense in under 60 seconds, $0.03/transaction captured, FRE 902(13)/(14) compliant, RFC 3161 timestamped. A direct competitor to Provenant's proof-issuance layer, specifically in the fiat/card chargeback context.
+
+**Internet Court** (internetcourt.org) — Also real. AI agent agreements + AI jury verdicts. A third player.
+
+### What the report overstates
+
+**"IETF standards"** — Don't use this phrase. ADRP and ATXN are individual internet-drafts with no formal IETF process standing and no IETF endorsement. There is also a *competing* draft (`draft-kotecha-agentic-dispute-protocol-00`) from a different author, meaning the field hasn't converged yet. The accurate framing: "emerging specification" or "leading proposed standard." A sharp investor who checks will know the difference.
+
+**"Adopt ADRP to avoid building a proprietary schema"** — Half right. Aligning the proof envelope with ADRP's ProofBundle/RulingBundle structure is the correct call architecturally, because it makes the output interoperable and gives you a spec to point to in the pitch. But the spec is young and competing, so frame it as "we implement the leading proposed standard" not "we are the commercial orchestrator of the IETF standard."
+
+**x402/Base for the Betaworks demo** — The research report recommends anchoring proof signatures on-chain via x402. That's a real direction for Phase 4, but it adds non-trivial scope to a 3.5-week sprint when the existing stack is Ed25519 + internal ledger + Stripe. Show x402 compatibility as a design choice in the pitch deck; don't require it to demo the core loop.
+
+### What this changes in the plan
+
+**Phase 1 outreach — sharpen the questions.** When talking to ACP/AP2/x402 integrators, ask specifically: "If your agent triggers an irreversible on-chain payment and the counterparty doesn't deliver, how are you handling it today?" That maps directly to the proven AgentCourt pain and surfaces whether integrators are already using AgentCourt or looking for something else.
+
+**Phase 2 schema — align with ADRP.** When extending `tangible/crypto.py` to cover dispute outcomes, structure the payload to be compatible with ADRP's ProofBundle/RulingBundle field names. This is a design decision, not extra engineering — you're building the same thing either way, just naming fields to match a published spec.
+
+**The pitch "why us" answer now has a sharper target.** CertNode and AgentCourt together do most of the merged thesis — but they're siloed (not integrated), crypto-only with no fiat rails, and neither has compliance-grade identity (IAL2) or licensed notarization. The answer to "why not just use those" is: we cover fiat + crypto, we're the only one with compliance-grade identity and notarization baked into the same proof envelope, and the integration is the product — we're not two separate APIs you glue together yourself.
+
+**Add these to the competitor section of the Betaworks application.** Naming AgentCourt and CertNode by name and explaining what they don't cover is more credible than ignoring them. Investors know they exist.
