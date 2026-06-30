@@ -66,3 +66,59 @@ def verify_document(proof: dict, document_bytes: bytes) -> Tuple[bool, str]:
     if actual != proof.get("document_sha256"):
         return False, "document does not match the one in the proof"
     return True, "document matches proof"
+
+
+# Map our internal action_type onto an ADRP ProofBundle proofType.
+_ADRP_PROOF_TYPE = {
+    "verify_identity": "identity",
+    "notarize": "notarization",
+}
+
+
+def to_adrp_bundle(proof: dict) -> dict:
+    """Project a signed proof onto an ADRP ProofBundle *view* (output adapter).
+
+    This is a pure, read-only transform: it does NOT touch the signed content,
+    `_canonical_bytes`, or any signature. It maps our existing signed fields onto
+    the field names of the ADRP (Agentic Dispute Resolution Protocol) ProofBundle
+    so the proof's *output* is interoperable with the leading proposed standard.
+    The internal signed payload is unchanged, so `verify_proof` still passes on
+    the original `proof` object after this call.
+
+    See merge-plan.md: native ADRP-signed payloads are parked for Phase 4 — this
+    sprint only aligns the exported shape, with zero signature risk.
+    """
+    action = proof.get("action_type", "")
+    bundle: dict = {
+        "proofType": _ADRP_PROOF_TYPE.get(action, action or "unknown"),
+        "subject": {},
+        "claims": {},
+        "signature": {
+            "keyId": proof.get("key_id"),
+            "alg": proof.get("algorithm"),
+            "contentHash": proof.get("content_hash"),
+        },
+    }
+
+    if proof.get("proof_id") is not None:
+        bundle["proofId"] = proof["proof_id"]
+
+    # subject
+    if proof.get("subject_email") is not None:
+        bundle["subject"]["email"] = proof["subject_email"]
+    if proof.get("subject_name") is not None:
+        bundle["subject"]["name"] = proof["subject_name"]
+    if proof.get("document_sha256") is not None:
+        bundle["subject"]["documentSha256"] = proof["document_sha256"]
+    if proof.get("document_name") is not None:
+        bundle["subject"]["documentName"] = proof["document_name"]
+
+    # claims
+    if proof.get("ial_level") is not None:
+        bundle["claims"]["ial"] = proof["ial_level"]
+    if proof.get("verified") is not None:
+        bundle["claims"]["verified"] = proof["verified"]
+    if proof.get("jurisdiction") is not None:
+        bundle["claims"]["jurisdiction"] = proof["jurisdiction"]
+
+    return bundle
