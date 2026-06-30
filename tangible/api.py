@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import json
 import os
+import time
 from dataclasses import asdict
 from typing import List, Optional
 
@@ -98,8 +99,18 @@ def get_action(action_id: str):
 
 @app.post("/v1/verify")
 def verify(body: VerifyIn):
+    # Time the actual verification: it's offline (no network), so this number is
+    # the real "verify a signed proof in <1ms" wedge claim, not the human session.
+    start = time.perf_counter()
     ok, reason = service.verify(body.proof)
-    return {"valid": ok, "reason": reason}
+    took_ms = round((time.perf_counter() - start) * 1000, 3)
+    return {"valid": ok, "reason": reason, "took_ms": took_ms}
+
+
+@app.post("/verify")
+def verify_alias(body: VerifyIn):
+    """Unversioned alias for the demo's `curl …/verify` snippet (web/try.html)."""
+    return verify(body)
 
 
 @app.post("/v1/proofs/{proof_id}/revoke")

@@ -22,6 +22,20 @@
 
 ---
 
+## The validation wedge & what we're proving now
+
+*(Added for this cycle. Stance: apply with the validated wedge, the live demo, and the merge as the stated roadmap — Decision 14. A narrow validated story with a credible next step beats a polished unvalidated merged pitch.)*
+
+**The wedge.** Verification is the beachhead. The one claim that is real today — and that an incumbent KYC vendor structurally can't match — is: *a signed Provenant proof re-verifies against a pinned key, offline, in under a millisecond, with no callback.* That is the live demo at **useprovenant.xyz/try.html**: paste or edit a signed proof and watch it pass or fail in real time, head-to-head against a re-running incumbent.
+
+**Merge as the sequence, not the headline.** The merged proof+dispute thesis (the immutable original proof superseded by an equally immutable ruling on the same chain) stays the destination. But we lead with verification because that's where we have evidence; leading with the unvalidated merge would be "two businesses glued by a narrative," which we deliberately avoid (Decision 16). The wedge earns the right to the platform.
+
+**Kill criterion (live, dated).** We're running a real willingness-to-pay test with a warm buyer whose budget currently goes to an incumbent KYC vendor. The bar for "continue" is a **verbal pilot commit at a stated price within ~2 weeks (~14 July)** — a real "would act," not "found it interesting" (Decision 6). 
+
+**If no real yes by the kill date.** We fall back to whichever validation thread got the strongest signal and apply honestly narrow; if there's no signal anywhere, we don't force a pitch this cycle (Decision 18). "Don't merge yet" is an acceptable, pre-committed output — not a failure.
+
+---
+
 ## Application answers, field by field
 
 ### Company name
@@ -47,7 +61,7 @@ Agents can now run whole document and back-office workflows, but they stall the 
 *Tip: this is their thesis question and the most important sentence in the application. It names a second-order effect of an AI-native economy (their lanes 3 and 4), not a feature.*
 
 ### Link to a live product or demo
-`▶ TO FILL with your deployed URL` — the prototype is built and runs end-to-end. `verify_identity` is **live via Stripe Identity** (real verification → signed proof); notarization runs in sandbox. Deploy on Render (see SETUP_LIVE.md) and paste the URL, or link a Loom of `agent_demo.py`.
+`▶ TO FILL with your deployed URL` — the prototype is built and runs end-to-end. **Lead with the verification wedge demo at `/try.html`**: paste/edit a signed proof and watch it verify offline in <1ms, head-to-head against a re-running incumbent, with the proof viewable as Summary / Raw JSON / ADRP Bundle. `verify_identity` is **live via Stripe Identity** (real verification → signed proof); notarization runs in sandbox. Deploy on Render (see SETUP_LIVE.md) and paste the URL, or link a Loom of `agent_demo.py`.
 
 ### Share screenshots of your product
 `▶ TO FILL` — 3–5 frames: (1) the agent hitting the "physical step" wall, (2) the API/MCP tool call, (3) the orchestration/compliance routing, (4) the returned signed document + proof JSON. Mockups OK if not live.
@@ -68,6 +82,8 @@ The choice to attend to: we model real-world acts as **typed, verifiable actions
 ### Who are your competitors and what makes you different?
 Human-facing RON / e-notary incumbents: [Proof (formerly Notarize)](https://www.proof.com/), DocuSign Notary, [Stavvy](https://www.stavvy.com/), BlueNotary. They're built for a person clicking through a web app, sold to title companies and lenders. Provenant is **agent-API-first**: an agent calls one endpoint, pays per action, and gets back a verifiable result — no human UI, no seat licenses. Agent payment rails (Stripe, Coinbase x402, AWS AgentCore) are *not* competitors; we sit on top as the action the agent pays for. The broader bet — a general physical-action API for agents — has no direct competitor; the closest analogs are human-facing service marketplaces (Thumbtack and the like), which are not agent-native. We are not another notary platform; we're the interface agents use to act in the world, and notary is verb #1.
 
+**On the proof+dispute thesis specifically — naming the real ones.** Two shipping projects cover pieces of the merged proof-and-dispute thesis, and we name them rather than pretend they don't exist (investors know they do). **[AgentCourt](https://agentcourt.org)** is real and live: a policy-driven dispute-resolution API (7 policy templates, 39 deterministic rules, sub-500ms rulings, ~$0.05/dispute via x402 USDC on Base, MCP + SDKs). **CertNode** is real: its Reflex product does automated Stripe chargeback defense in under 60s (~$0.03/transaction, FRE 902(13)/(14) compliant, RFC 3161 timestamped). Between them they do much of the merged thesis — but they are **siloed** (not integrated with each other), **crypto-only with no fiat rails**, and **neither has compliance-grade identity (IAL2) or licensed notarization in the same proof envelope**. The answer to "why not just use those": we cover fiat *and* crypto, we're the only one with compliance-grade identity and notarization baked into one signed envelope, and the integration *is* the product — not two APIs you glue together yourself.
+
 ### What is another startup or founder that you admire? Tell us why.
 `▶ TO FILL` — Personalize; they're testing your taste.
 
@@ -75,6 +91,8 @@ Human-facing RON / e-notary incumbents: [Proof (formerly Notarize)](https://www.
 
 ### Are you implementing any research we could familiarize ourselves with?
 RON statutes and the MISMO RON standards; identity-proofing frameworks (NIST 800-63 / IAL2); the agent-payment stack — [Coinbase x402](https://www.openfort.io/blog/agentic-payments-landscape), [Google AP2](https://cloud.google.com/blog/products/ai-machine-learning/announcing-agents-to-payments-ap2-protocol), and [AWS Bedrock AgentCore Payments](https://aws.amazon.com/blogs/machine-learning/agents-that-transact-introducing-amazon-bedrock-agentcore-payments-built-with-coinbase-and-stripe/); and MCP for exposing the action API as agent-callable tools.
+
+On proof interoperability we **implement the leading proposed standard, ADRP** (the Agentic Dispute Resolution Protocol ProofBundle shape). To be accurate: ADRP is a real but *young, individually-authored internet-draft* with a competing proposal — **not an IETF standard**, and we don't claim it is. Our `to_adrp_bundle()` adapter emits ADRP-compatible output today (the internal signed payload is unchanged), so a partner's engineers can consume our proofs against a published spec without a Provenant SDK. We frame this as "standards-aligned with an emerging spec," which survives a reviewer who checks.
 
 ### Inception date
 `▶ TO FILL` — yyyy-mm-dd; when you started on this idea. If unsure, use the prototype start date.

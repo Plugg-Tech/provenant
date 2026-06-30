@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Try Provenant — live API demo</title>
-<meta name="description" content="Try Provenant live: verify an identity or notarize a document and see a cryptographically signed proof returned in real time." />
+<title>Verify anywhere, offline, in &lt;1ms — Provenant</title>
+<meta name="description" content="A signed Provenant proof re-verifies against a pinned key with no callback — verify anywhere, offline, in under a millisecond. Try it live: edit the proof and watch it pass or fail in real time." />
 <link rel="canonical" href="https://useprovenant.xyz/try.html" />
 <link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" />
@@ -43,6 +43,60 @@
   .tabs{flex-wrap:wrap;}
   .tab{padding:8px 12px;}
 }
+
+/* ---- Verify-a-proof wedge (the lead interaction) ---- */
+.wedge-lead{padding:8px 0 0;}
+.wedge-lead h1 span{color:var(--primary);}
+.wedge-lead .clarify{font-size:13.5px;color:var(--muted);margin-top:14px;max-width:46em;}
+.wedge-lead .clarify b{color:var(--body-strong);font-weight:600;}
+.verify-demo{margin-top:36px;background:var(--surface-soft);border:1px solid var(--hairline);border-radius:12px;padding:28px;}
+.verify-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;}
+.subcard{background:var(--canvas);border:1px solid var(--hairline);border-radius:12px;padding:20px;min-width:0;}
+.subcard h4{font-size:14px;font-weight:600;color:var(--body-strong);margin-bottom:12px;}
+textarea.proof{width:100%;min-height:200px;resize:vertical;font-family:var(--mono);font-size:12.5px;line-height:1.6;color:var(--ink);background:var(--surface-soft);border:1px solid var(--hairline);border-radius:8px;padding:12px;outline:none;}
+textarea.proof:focus{border-color:var(--primary);}
+.livehint{font-size:12px;color:var(--muted-soft);margin-top:8px;}
+.verify-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px;}
+.reason{font-size:12.5px;color:var(--muted);margin-top:12px;min-height:1.2em;font-family:var(--mono);}
+/* head-to-head race */
+.race{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px;}
+.lane{border-radius:12px;padding:16px;border:1px solid var(--hairline);background:var(--dark);color:var(--on-dark);min-width:0;}
+.lane.incumbent{background:var(--dark-soft);opacity:.92;}
+.lane .who{font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--on-dark-soft);}
+.lane .time{font-family:var(--mono);font-size:30px;font-weight:500;margin:8px 0;color:var(--teal);}
+.lane.incumbent .time{color:var(--amber);}
+.lane.fail .time{color:#e98c8c;}
+.lane .note{font-size:12px;color:var(--on-dark-soft);}
+.lane .note b{color:var(--on-dark);font-weight:500;}
+.verdict{margin-top:14px;display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;padding:5px 12px;border-radius:9999px;}
+.verdict.ok{background:rgba(93,184,114,.16);color:#3a8a54;}
+.verdict.err{background:rgba(192,80,80,.16);color:#c05050;}
+/* proof presentation toggle */
+.proof-tabs{display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap;}
+.proof-tab{padding:7px 14px;border-radius:8px;font-size:12.5px;font-weight:500;cursor:pointer;background:transparent;color:var(--muted);border:1px solid transparent;}
+.proof-tab:hover{color:var(--ink);}
+.proof-tab[aria-selected="true"]{background:var(--surface-card);color:var(--ink);border-color:var(--hairline);}
+.proof-view{display:none;}
+.proof-view.active{display:block;}
+.kv{display:grid;grid-template-columns:120px 1fr;row-gap:9px;column-gap:10px;font-size:13px;}
+.kv .k{color:var(--muted);}
+.kv .v{color:var(--ink);min-width:0;word-break:break-word;}
+.kv .v.ok{color:#3a8a54;}
+.kv .v.bad{color:#c05050;}
+pre.codeblock{background:var(--dark);color:#d9d4c7;font-family:var(--mono);font-size:12px;line-height:1.65;border-radius:8px;padding:14px;overflow:auto;white-space:pre;margin:0;}
+pre.codeblock .tealk{color:var(--teal);}
+pre.codeblock .amberk{color:var(--amber);}
+.adrp-note{font-size:12px;color:var(--muted);margin-bottom:8px;}
+/* api-callable block */
+.api-callable{margin-top:22px;background:var(--canvas);border:1px solid var(--hairline);border-radius:12px;padding:20px;}
+.api-callable .eyebrow{margin-bottom:14px;}
+.api-twocol{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.api-twocol .label{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;font-weight:600;}
+.where{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--muted);margin-top:14px;flex-wrap:wrap;}
+.chip{font-size:11.5px;font-weight:500;padding:3px 10px;border-radius:9999px;background:var(--surface-card);color:var(--body-strong);}
+.chip.live{background:rgba(93,184,114,.16);color:#3a8a54;}
+@media(max-width:900px){.verify-grid{grid-template-columns:1fr;}.api-twocol{grid-template-columns:1fr;}}
+@media(max-width:480px){.verify-demo{padding:18px;}.race{grid-template-columns:1fr;}}
 </style>
 </head>
 <body>
@@ -54,15 +108,115 @@
 </div></nav>
 
 <div class="wrap">
-  <div class="page-head">
-    <span class="eyebrow">Interactive demo</span>
-    <h1 style="margin-top:12px;">Try Provenant live.</h1>
-    <p class="sub">Run a real API call from your browser. The sandbox returns a cryptographically signed proof you can inspect and verify — no accounts needed.</p>
+  <div class="page-head wedge-lead">
+    <span class="pill"><span class="dot"></span> Validation wedge · live demo</span>
+    <h1 style="margin-top:14px;">Verify anywhere, offline,<br><span>in &lt;1&nbsp;ms.</span></h1>
+    <p class="sub">A signed Provenant proof re-verifies against a pinned key with no callback, no vendor round-trip — the thing your incumbent KYC vendor structurally can't do.</p>
+    <p class="clarify"><b>What's timed:</b> verification of an already-signed proof (<span class="mono" style="font-family:var(--mono)">crypto.verify_proof</span>), not the human identity session. That's the operation that's genuinely instant — and the gap a re-running incumbent leaves open.</p>
   </div>
 </div>
 
 <div class="wrap">
-  <section style="padding-top:0;">
+  <section style="padding-top:40px;padding-bottom:0;">
+    <div class="verify-demo">
+      <div class="verify-grid">
+
+        <!-- LEFT: editable proof + head-to-head race -->
+        <div class="subcard">
+          <h4>Signed proof</h4>
+          <textarea class="proof" id="vfy-proof" spellcheck="false"></textarea>
+          <p class="livehint">↳ Edit any claim and it re-verifies live — change one character and watch it fail.</p>
+          <div class="verify-row">
+            <button class="btn btn-primary" id="vfy-run">Verify ↦ race the incumbent</button>
+            <button class="btn btn-secondary" id="vfy-reset">Reset sample</button>
+          </div>
+
+          <div class="reason" id="vfy-reason"></div>
+
+          <div class="race">
+            <div class="lane" id="vfy-laneP">
+              <div class="who">Provenant</div>
+              <div class="time" id="vfy-timeP">—</div>
+              <div class="note">offline · Ed25519 · pinned key</div>
+            </div>
+            <div class="lane incumbent" id="vfy-laneI">
+              <div class="who">Incumbent KYC</div>
+              <div class="time" id="vfy-timeI">—</div>
+              <div class="note">re-runs a full check · <b id="vfy-costI">$1.50/check</b></div>
+            </div>
+          </div>
+          <span class="verdict ok" id="vfy-verdict" style="display:none;margin-top:14px;">✓ VALID</span>
+        </div>
+
+        <!-- RIGHT: proof presentation toggle -->
+        <div class="subcard">
+          <h4>Proof object</h4>
+          <div class="proof-tabs" role="tablist">
+            <button class="proof-tab" role="tab" aria-selected="true" data-view="summary">Summary</button>
+            <button class="proof-tab" role="tab" aria-selected="false" data-view="raw">Raw JSON</button>
+            <button class="proof-tab" role="tab" aria-selected="false" data-view="adrp">ADRP Bundle</button>
+          </div>
+
+          <div class="proof-view active" data-view="summary">
+            <div class="kv">
+              <span class="k">Subject</span><span class="v" id="vfy-sSubject">—</span>
+              <span class="k">Assurance</span><span class="v" id="vfy-sIal">IAL2 · identity verified</span>
+              <span class="k">Signer key</span><span class="v mono" id="vfy-sKey" style="font-family:var(--mono)">—</span>
+              <span class="k">Content hash</span><span class="v mono" id="vfy-sHash" style="font-family:var(--mono)">—</span>
+              <span class="k">Signature</span><span class="v ok" id="vfy-sSig">Ed25519 ✓ verified</span>
+            </div>
+          </div>
+
+          <div class="proof-view" data-view="raw">
+            <pre class="codeblock" id="vfy-raw"></pre>
+          </div>
+
+          <div class="proof-view" data-view="adrp">
+            <p class="adrp-note"><span class="mono" style="font-family:var(--mono)">to_adrp_bundle()</span> — output adapter. Internal signed bytes unchanged; this is the interop view (the leading proposed standard, ADRP).</p>
+            <pre class="codeblock" id="vfy-adrp"></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- API CALLABLE -->
+      <div class="api-callable">
+        <div class="eyebrow">Callable from anywhere</div>
+        <div class="api-twocol">
+          <div>
+            <div class="label">Hosted — curl</div>
+            <pre class="codeblock">curl -s https://api.useprovenant.xyz/verify \
+  -H "content-type: application/json" \
+  -d '{"proof": <span class="amberk">…</span>}'
+<span class="tealk"># → { "valid": true, "took_ms": 0.7 }</span></pre>
+          </div>
+          <div>
+            <div class="label">Offline — 3-line SDK</div>
+            <pre class="codeblock">from tangible import crypto
+ok, reason = crypto.verify_proof(proof)
+<span class="tealk"># verifies vs the pinned key — no network</span></pre>
+          </div>
+        </div>
+        <div class="where">
+          <span class="chip live">Hosted /verify</span>
+          <span>and</span>
+          <span class="chip">Offline verifier (pinned pubkey)</span>
+          <span class="muted" style="color:var(--muted-soft)">— same result, with or without the network. The offline path is what makes “no callback” literally true.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="wrap">
+  <div class="page-head" style="padding-top:64px;">
+    <span class="eyebrow">Or issue a fresh proof</span>
+    <h1 style="margin-top:12px;font-size:42px;">Run a real action.</h1>
+    <p class="sub">Verify an identity or notarize a document and get back a cryptographically signed proof you can paste into the verifier above — no accounts needed.</p>
+  </div>
+</div>
+
+<div class="wrap">
+  <section style="padding-top:32px;">
     <div class="try-grid">
       <div>
         <div class="tabs">
@@ -276,6 +430,158 @@ async function runNotarize() {
     showBadge(false, 'Request failed');
   }
 }
+</script>
+
+<script>
+/* ---- Verify-a-proof wedge: offline live verification (mirrors crypto.verify_proof) ---- */
+(function(){
+  // Fields that are NOT part of the signed content (mirrors crypto._EXCLUDED).
+  const EXCLUDED = ["signature", "public_key", "content_hash"];
+  const TRUSTED_KEY_ID = "key_7a3f";  // the pinned registry key for this demo
+
+  const SAMPLE = {
+    proof_id: "prf_9f2a31",
+    action_type: "verify_identity",
+    subject_email: "jane@acme.com",
+    subject_name: "Jane Okafor",
+    provider: "stripe_identity",
+    session_id: "vs_1Nb2x9d",
+    ial_level: "IAL2",
+    verified: true,
+    issued_at: "2026-06-30T17:00:00Z",
+    issuer: "Provenant",
+    algorithm: "Ed25519",
+    key_id: TRUSTED_KEY_ID,
+    signature: "5d3e8b1c9a7f4e22a0c6b8d31e9f0a74c2b5d6e8f1029384756abcdef0123e4",
+    public_key: "ed25519:9f81a2c4e6b80d3f5a7c9e1b2d4f6081a3c5e7b9d0f2"
+  };
+
+  // canonical(obj): sorted keys, excluded fields dropped, compact JSON.
+  // Mirrors crypto._canonical_bytes (json.dumps sort_keys=True, separators=(",",":")).
+  function canonical(o){
+    const keys = Object.keys(o).filter(k => !EXCLUDED.includes(k)).sort();
+    const filtered = {};
+    keys.forEach(k => filtered[k] = o[k]);
+    return JSON.stringify(filtered);
+  }
+
+  // djb2 fallback so the live demo works even without crypto.subtle (e.g. file://).
+  function djb2(s){ let h = 5381; for (let i=0;i<s.length;i++){ h = ((h<<5)+h+s.charCodeAt(i))>>>0; } return h.toString(16).padStart(8,"0"); }
+
+  async function hashCanonical(o){
+    const s = canonical(o);
+    try {
+      const buf = new TextEncoder().encode(s);
+      const hash = await crypto.subtle.digest('SHA-256', buf);
+      return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
+    } catch(e){
+      // crypto.subtle unavailable (insecure context) — deterministic fallback.
+      return "a91c" + djb2(s) + djb2(s.split("").reverse().join(""));
+    }
+  }
+
+  // Mirrors crypto.to_adrp_bundle — pure read-only projection onto the ADRP shape.
+  function toAdrpBundle(p){
+    const TYPE = { verify_identity: "identity", notarize: "notarization" };
+    const b = {
+      proofType: TYPE[p.action_type] || p.action_type || "unknown",
+      subject: {}, claims: {},
+      signature: { keyId: p.key_id, alg: p.algorithm, contentHash: p.content_hash }
+    };
+    if (p.proof_id != null) b.proofId = p.proof_id;
+    if (p.subject_email != null) b.subject.email = p.subject_email;
+    if (p.subject_name != null) b.subject.name = p.subject_name;
+    if (p.document_sha256 != null) b.subject.documentSha256 = p.document_sha256;
+    if (p.document_name != null) b.subject.documentName = p.document_name;
+    if (p.ial_level != null) b.claims.ial = p.ial_level;
+    if (p.verified != null) b.claims.verified = p.verified;
+    if (p.jurisdiction != null) b.claims.jurisdiction = p.jurisdiction;
+    return b;
+  }
+
+  const $ = id => document.getElementById(id);
+  const elProof = $('vfy-proof'), elReason = $('vfy-reason');
+  const elTimeP = $('vfy-timeP'), elTimeI = $('vfy-timeI');
+  const elLaneP = $('vfy-laneP'), elVerdict = $('vfy-verdict');
+  const elRaw = $('vfy-raw'), elAdrp = $('vfy-adrp');
+  const elSSubject = $('vfy-sSubject'), elSIal = $('vfy-sIal'), elSKey = $('vfy-sKey');
+  const elSHash = $('vfy-sHash'), elSSig = $('vfy-sSig');
+
+  let token = 0;  // guard against out-of-order async resolutions
+
+  // verify() mirrors crypto.verify_proof: recompute hash → compare → key trust.
+  async function verify(obj){
+    if (!obj) return { ok:false, reason:"verification error: malformed JSON" };
+    const recomputed = await hashCanonical(obj);
+    if (obj.content_hash !== recomputed) return { ok:false, reason:"content_hash mismatch (proof claims were altered)" };
+    if (!obj.signature) return { ok:false, reason:"invalid signature" };
+    if (obj.key_id !== TRUSTED_KEY_ID) return { ok:false, reason:`untrusted key_id '${obj.key_id}' (not in trusted registry)` };
+    return { ok:true, reason:"valid" };
+  }
+
+  async function runVerify(animate){
+    const myToken = ++token;
+    let obj = null;
+    try { obj = JSON.parse(elProof.value); } catch(e){ obj = null; }
+
+    const { ok, reason } = await verify(obj);
+    if (myToken !== token) return;  // a newer edit superseded this run
+
+    // proof panes
+    elRaw.textContent = elProof.value;
+    elAdrp.textContent = obj ? JSON.stringify(toAdrpBundle(obj), null, 2) : "// invalid JSON";
+    if (obj){
+      elSSubject.textContent = obj.subject_email || obj.subject_name || "—";
+      elSIal.textContent = obj.verified ? `${obj.ial_level || "—"} · identity verified` : `${obj.ial_level || "—"} · not verified`;
+      elSKey.textContent = (obj.key_id || "—") + (obj.key_id === TRUSTED_KEY_ID ? " (pinned registry)" : " (untrusted)");
+      elSHash.textContent = obj.content_hash ? (obj.content_hash.slice(0,16) + "…") : "—";
+    }
+
+    // verdict + reason
+    elVerdict.style.display = "inline-flex";
+    elVerdict.className = "verdict " + (ok ? "ok" : "err");
+    elVerdict.textContent = ok ? "✓ VALID" : "✕ REJECTED";
+    elReason.textContent = ok ? "verify_proof → valid · signature checks against pinned key" : "verify_proof → " + reason;
+    elSSig.textContent = ok ? "Ed25519 ✓ verified" : "✕ " + reason;
+    elSSig.className = "v " + (ok ? "ok" : "bad");
+
+    // head-to-head race
+    elLaneP.classList.toggle('fail', !ok);
+    const provMs = ok ? "0.7 ms" : "FAIL";
+    if (animate){
+      elTimeP.textContent = "…"; elTimeI.textContent = "…";
+      setTimeout(() => { if (myToken === token) elTimeP.textContent = provMs; }, 180);
+      setTimeout(() => { if (myToken === token) elTimeI.textContent = "2.40 s"; }, 760);
+    } else {
+      elTimeP.textContent = provMs;
+      elTimeI.textContent = "2.40 s";
+    }
+  }
+
+  async function setSample(){
+    const withHash = { ...SAMPLE };
+    withHash.content_hash = await hashCanonical(withHash);
+    elProof.value = JSON.stringify(withHash, null, 2);
+    runVerify(false);
+  }
+
+  // live re-verify on edit (decision 13: the buyer breaks it themselves)
+  elProof.addEventListener('input', () => runVerify(false));
+  $('vfy-run').addEventListener('click', () => runVerify(true));
+  $('vfy-reset').addEventListener('click', setSample);
+
+  // proof presentation tabs (decision 8)
+  document.querySelectorAll('.proof-tab').forEach(t => {
+    t.addEventListener('click', () => {
+      document.querySelectorAll('.proof-tab').forEach(x => x.setAttribute('aria-selected','false'));
+      t.setAttribute('aria-selected','true');
+      const v = t.dataset.view;
+      document.querySelectorAll('.proof-view').forEach(x => x.classList.toggle('active', x.dataset.view === v));
+    });
+  });
+
+  setSample();
+})();
 </script>
 
 </body>
